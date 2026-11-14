@@ -1,57 +1,65 @@
-# EXPERIMENT DETAILS
+# CAT5B.3 — Timer-Driven Multi-Pattern Signal Generator
 
-**EXP:** CONTINUOUS ASSESSMENT 5 (CAT5)
+## Overview
 
-**DATE:** 10/08/2026
+This AT89S52 program serializes one of four 24-bit patterns onto `P1.1` at timer intervals. A push-button selects the pattern.
 
-**NAME OF EXP:** Hardware Timer and Interrupt-Based Timing for LED Fading, Pulse Generation, and Stepper Motor Control
+## Objectives
 
-**HARDWARE SETUP / PLATFORM:** AT89S52 (11.0592 MHz) + Keil C51 uVision + Oscilloscope
+- Use Timer 0 interrupts to set a repeatable output bit interval.
+- Store digital patterns in code memory and output them one bit at a time.
+- Select the active pattern with a push-button.
 
----
+## Hardware Requirements
 
-## TASK 5B.3: Multi-Waveform Signal Generator (Square, Duty, Pulse, Burst)
+- AT89S52 microcontroller with an 11.0592 MHz clock assumed by the source timing calculations
+- Push-button input on `P3.2`
+- Signal output on `P1.1`
+- Oscilloscope or equivalent instrument to observe the output (as listed in the existing assignment notes)
 
-### 1. Hardware Setup & Circuit Diagram
+## Software Requirements
 
-- **MCU:** AT89S52 @ 11.0592 MHz
-- **Signal Output:** `P1.1` → Oscilloscope Channel 1
-- **Waveform Selector:** `P3.2` pushbutton
-- **Waveform Modes:**
-  - Square Wave
-  - Variable Duty-Cycle Wave
-  - Pulse Train
-  - Burst Signal
+- Keil µVision with the C51 toolchain
+- `TASK5B_3.uvproj` declares a 33 MHz project clock, while the timer reload is calculated for 11.0592 MHz. Verify the actual clock before relying on signal timing.
 
-![CAT5B.3 Circuit Diagram](circuit.png)
+## Project Structure
 
-### 2. Core Logic / Pseudocode / Code Base
+```text
+CAT5B.3/
+├── README.md
+├── STARTUP.A51
+├── TASK5B_3.uvproj
+├── circuit.png
+├── main.c
+└── Objects/
+    ├── README.md
+    └── TASK5B_3.hex
+```
 
-**Working Principle:**
+- `main.c` defines the patterns, timer ISR, and mode-selection logic.
+- `TASK5B_3.uvproj` includes `main.c` and `STARTUP.A51`.
+- `Objects/TASK5B_3.hex` is the existing build output; `Objects/README.md` is present but empty.
 
-The signal generator uses 24-bit waveform patterns stored in ROM. Timer 0 generates an interrupt every 500 µs, and the ISR shifts the selected waveform pattern onto `P1.1` one bit at a time, starting from the most significant bit.
+## Circuit Diagram
 
-The waveform selector button connected to `P3.2` switches between the four available waveform modes.
+![Circuit diagram](circuit.png)
 
-**Pseudocode:**
+## Implementation
 
-1. Store the four 24-bit waveform masks in a ROM array.
-2. Configure Timer 0 to generate interrupts at 500 µs intervals.
-3. In the Timer 0 ISR:
-   - Output bit `(23 - bit_idx)` to `P1.1`.
-   - Increment `bit_idx` to move to the next bit.
-4. Detect and debounce the button press on `P3.2`.
-5. Update `wave_mode` to select the next waveform.
+`waveforms[]` stores four 24-bit masks: alternating bits (`0xAAAAAA`), four-on/four-off groups (`0xF0F0F0`), a pulse pattern (`0x802008`), and a burst pattern (`0xAA00AA`). Timer 0 is reloaded with `0xFE33`; each ISR writes the next mask bit, most-significant bit first, to `P1.1`. A debounced active-low press on `P3.2` advances the pattern and restarts its bit index.
 
-**Code Base:**
+## Working Principle
 
-- `waveforms[4]` stores the four waveform patterns.
-- `bit_idx` tracks the current bit position.
-- `wave_mode` selects the active waveform.
-- A parameterized ISR handles all four waveform types.
+1. Initialize Timer 0 and the signal and button pins.
+2. On each timer interrupt, output the current bit of the selected mask.
+3. Advance the bit index and wrap it after 24 bits.
+4. On a button press, select the next mask and restart at its first bit.
+5. Repeat the selected pattern continuously.
 
-**Build Note:** Rebuild `TASK5B_3.uvproj` in Keil C51 uVision to regenerate `Objects/TASK5B_3.hex` before flashing the AT89S52 board.
+## Output / Results
 
-### 3. Inference
+The intended output is a repeating digital waveform corresponding to the selected mask. The source uses a nominal 500 µs bit slot at 11.0592 MHz; actual timing depends on clock configuration and interrupt overhead. No oscilloscope screenshot is present.
 
-Bit-slotted timer serialization enables multiple digital waveform patterns to be generated through a single GPIO pin. The system produces square waves, variable duty-cycle waves, pulse trains, and burst signals using Timer 0 interrupts.
+## Conclusion
+
+The program demonstrates timer-paced digital pattern generation and simple button-based mode selection on a single output pin.

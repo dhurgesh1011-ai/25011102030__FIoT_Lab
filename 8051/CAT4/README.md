@@ -1,52 +1,68 @@
-# CAT4 – 8051 Matrix Keypad, Seven-Segment Display and LED Interfacing
+# CAT4 — Matrix Keypad, Seven-Segment Display, and LED Control
 
-## Experiment Details
-- **Course:** 25CS2741 – Fundamentals of Internet of Things + Lab
-- **Date:** 03/08/2026
-- **Microcontroller:** AT89S52 (8051)
-- **Software:** Keil µVision
-- **Programming Language:** Embedded C
+## Overview
 
-## Aim
-To interface a 4×4 matrix keypad, seven-segment display and LEDs with the AT89S52 microcontroller to perform different operations based on keypad inputs.
+This AT89S52 program scans a matrix keypad, displays keys 0–9 on a seven-segment display, and uses the selected key to trigger LED patterns or direct LED states.
+
+## Objectives
+
+- Scan a keypad using Port 2.
+- Display decimal digits using a seven-segment lookup table.
+- Control LED patterns through key selection.
 
 ## Hardware Requirements
-- AT89S52 Development Board
-- 4×4 Matrix Keypad
-- D168K Seven-Segment Display
-- On-board LEDs
-- USB Programmer
 
-## Pin Configuration
-- **P2.0–P2.3:** Keypad columns
-- **P2.4–P2.7:** Keypad rows
-- **P0.0–P0.7:** Seven-segment display
-- **P1.0:** On-board LED
+- AT89S52 development board
+- Matrix keypad
+- D168K seven-segment display (identified in the original assignment notes)
+- LEDs
+- USB programmer, as listed in the original assignment notes
+
+The source assigns keypad scanning to Port 2, the segment pattern to Port 0, and LED patterns to Port 1. The exact display type and electrical connections are not established by the source.
+
+## Software Requirements
+
+- Keil µVision with the C51 toolchain
+- The Keil project targets the AT89S52 and declares a 33 MHz project clock. The software delay duration depends on the actual clock and compiler.
+
+## Project Structure
+
+```text
+CAT4/
+├── README.md
+├── STARTUP.A51
+├── circuit.png
+├── week4.uvproj
+├── week4_logic.c
+└── Objects/
+    ├── README.md
+    └── week4.hex
+```
+
+- `week4_logic.c` implements keypad scanning, digit output, LED modes, and delays.
+- `week4.uvproj` includes `week4_logic.c` and `STARTUP.A51`.
+- `Objects/week4.hex` is the existing build output; `Objects/README.md` is present.
 
 ## Circuit Diagram
 
-![CAT4 Circuit Diagram](circuit.png)
+![Circuit diagram](circuit.png)
 
-## Task Description
-- Scan the 4×4 matrix keypad to detect key presses.
-- Display the corresponding digit on the seven-segment display.
-- Control LED operations according to the detected key.
-- Implement running LED, alternate LED, binary counter and blinking patterns.
-- Reset the system when key 0 is pressed.
+## Implementation
 
-## Algorithm
-1. Initialize the keypad, seven-segment display and LEDs.
-2. Continuously scan the keypad.
-3. Identify the pressed key.
-4. Display the corresponding digit.
-5. Execute the assigned LED operation.
-6. Repeat the process.
+`keypad_scan()` drives four row patterns on `P2.7`–`P2.4` and checks `P2.3`–`P2.1` for the first three rows; the fourth row checks `P2.2` for key 0. The implemented key map is 1–9 and 0, not all sixteen keys of a 4×4 keypad. `display_digit()` writes a 0–9 lookup-table value to `P0`. Keys 1–4 select individual `P1.1`–`P1.4` bits; keys 5–8 run LED patterns; key 9 clears the LEDs; key 0 clears the LEDs and displays 0.
 
-## Source Files
-- `week4_logic.c` – Embedded C program.
-- `week4.uvproj` – Keil project.
-- `Objects/week4.hex` – Compiled HEX file.
-- `circuit.png` – Circuit diagram.
+## Working Principle
 
-## Result
-The matrix keypad, seven-segment display and LEDs were interfaced with the AT89S52 microcontroller. Keypad inputs were used to display digits and execute the corresponding LED operations.
+1. Initialize `P0`, `P1`, and the keypad port.
+2. Repeatedly scan the keypad and detect a newly pressed key.
+3. Display digits 0–9 on the seven-segment output.
+4. Run the corresponding LED action for the key.
+5. Continue scanning; pattern routines check for a different key so an action can be interrupted.
+
+## Output / Results
+
+The intended result is a displayed digit for each recognized key and the associated LED action. Keys beyond 0–9 are not handled by this source. No output screenshot is present.
+
+## Conclusion
+
+The program demonstrates keypad scanning, seven-segment digit encoding, and key-selected LED control using the AT89S52.

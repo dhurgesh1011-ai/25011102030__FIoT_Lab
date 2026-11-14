@@ -1,42 +1,63 @@
-# EXPERIMENT DETAILS
+# CAT5A — Timer 0 Interrupt LED Toggle
 
-**EXP:** CONTINUOUS ASSESSMENT 5 (CAT5)
+## Overview
 
-**DATE:** 10/08/2026
+This AT89S52 program uses Timer 0 interrupts to maintain a millisecond counter and toggle an LED after each 1,000 timer interrupts.
 
-**NAME OF EXP:** Timer and Interrupt Programming
+## Objectives
 
-**HARDWARE SETUP / PLATFORM:**
-- Microcontroller: AT89S52 (8051)
-- Crystal Frequency: 11.0592 MHz
-- Software: Keil µVision
-- Output: LED
+- Configure Timer 0 in 16-bit Mode 1.
+- Enable and service a timer interrupt.
+- Use an interrupt counter to schedule an LED state change.
 
-**TASK NO:** CAT5A – Timer 0 Interrupt
+## Hardware Requirements
 
-## CIRCUIT DIAGRAM
+- AT89S52 microcontroller
+- LED assigned to `P1.0`
+- The source timer preload is calculated for an 11.0592 MHz crystal.
 
-![CAT5A Circuit Diagram](circuit.png)
+## Software Requirements
 
-## OBJECTIVE
+- Keil µVision with the C51 toolchain
+- `TASK5A.uvproj` declares a 33 MHz project clock, while the source preload comment assumes 11.0592 MHz. Verify the actual clock before relying on the one-second interval.
 
-- Configure Timer 0 of the 8051 microcontroller.
-- Generate periodic interrupts using Timer 0.
-- Toggle an LED at one-second intervals.
-- Understand timer-based interrupt handling.
+## Project Structure
 
-## CORE LOGIC
+```text
+CAT5A/
+├── README.md
+├── STARTUP.A51
+├── TASK5A.uvproj
+├── circuit.png
+├── main.c
+└── Objects/
+    ├── README.md
+    └── TASK5A.hex
+```
 
-1. Configure Timer 0 in the required operating mode.
-2. Load the appropriate timer initial values.
-3. Enable Timer 0 interrupt using ET0.
-4. Enable global interrupts using EA.
-5. Start Timer 0 using TR0.
-6. Execute the Timer 0 interrupt service routine whenever overflow occurs.
-7. Maintain a counter to generate a one-second interval.
-8. Toggle the LED after the required number of timer interrupts.
-9. Repeat continuously.
+- `main.c` configures Timer 0 and handles the interrupt.
+- `TASK5A.uvproj` includes `main.c` and `STARTUP.A51`.
+- `Objects/TASK5A.hex` is the existing build output; `Objects/README.md` is present but empty.
 
-## INFERENCE
+## Circuit Diagram
 
-Timer 0 was configured to generate periodic interrupts. The interrupt service routine was used to toggle the LED at one-second intervals, demonstrating timer operation and interrupt handling in the AT89S52 microcontroller.
+![Circuit diagram](circuit.png)
+
+## Implementation
+
+`timer0_init()` selects Timer 0 Mode 1, loads `TH0`/`TL0` with `0xFC66`, enables `ET0` and `EA`, and starts the timer. The Timer 0 ISR reloads the timer and increments `ms_ticks`. When the counter reaches 1,000, it resets the counter and complements the LED on `P1.0`. The source comments derive the preload for an approximately 1 ms tick at 11.0592 MHz.
+
+## Working Principle
+
+1. Set the LED low and start Timer 0.
+2. On each overflow, reload the timer and increment the tick count.
+3. After 1,000 interrupts, toggle the LED and clear the count.
+4. Repeat while the foreground loop remains idle.
+
+## Output / Results
+
+The intended output is a periodic LED toggle, approximately once per second under the source's assumed clock and timing. Actual timing depends on the board clock and compiler. No output screenshot is present.
+
+## Conclusion
+
+The experiment demonstrates timer-driven LED control using a periodic interrupt rather than a foreground delay loop.

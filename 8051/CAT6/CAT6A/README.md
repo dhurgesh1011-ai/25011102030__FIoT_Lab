@@ -1,63 +1,67 @@
-# CAT6A – 8051 UART Initialization and Character Transmission
+# CAT6A — UART Message Transmission
 
-## Experiment Details
-- **Course:** 25CS2741 – Fundamentals of Internet of Things + Lab
-- **Experiment:** UART Initialization and Character Transmission
-- **Date:** 17/08/26
-- **Microcontroller:** AT89S52 (8051)
-- **Software:** Keil µVision
-- **Programming Language:** Embedded C
+## Overview
 
-## Aim
-To configure the UART of the AT89S52 microcontroller and transmit characters serially to a PC terminal.
+This AT89S52 program configures the serial port and repeatedly transmits `Hello from 8051` followed by a carriage return and line feed.
+
+## Objectives
+
+- Configure the 8051 UART for asynchronous serial transmission.
+- Generate the baud rate using Timer 1.
+- Transmit a string to a serial terminal.
 
 ## Hardware Requirements
-- AT89S52 Development Board
-- USB-to-TTL Converter
-- USB Cable
-- PC with PuTTY Terminal
 
-## UART Configuration
-- **Communication Mode:** 8-bit UART
-- **Baud Rate:** 9600 bps
-- **Stop Bits:** 1
-- **Parity:** None
-- **Communication:** Asynchronous Serial Communication
+- AT89S52 microcontroller
+- USB-to-TTL serial adapter
+- PC with a serial terminal
+- UART transmit output `P3.1` connected to adapter RX and a shared ground
 
-## Pin Configuration
+The source does not use UART receive.
 
-| AT89S52 Pin | Connection |
-|---|---|
-| P3.1 (TXD) | USB-to-TTL RX |
-| P3.0 (RXD) | USB-to-TTL TX |
-| GND | USB-to-TTL GND |
+## Software Requirements
+
+- Keil µVision with the C51 toolchain
+- Serial terminal configured for 9600 baud, 8 data bits, no parity, and 1 stop bit
+- The source assumes an 11.0592 MHz clock for the 9600 baud setting. The project declares a 33 MHz clock; verify the physical clock before relying on the baud rate.
+
+## Project Structure
+
+```text
+CAT6A/
+├── README.md
+├── STARTUP.A51
+├── TASK6A.uvproj
+├── circuit.png
+├── main.c
+└── Objects/
+    ├── README.md
+    └── TASK6A.hex
+```
+
+- `main.c` configures UART transmission and sends the message.
+- `TASK6A.uvproj` includes `main.c` and `STARTUP.A51`.
+- `Objects/TASK6A.hex` is the existing build output; `Objects/README.md` is present but empty.
 
 ## Circuit Diagram
 
-![CAT6A Circuit Diagram](circuit.png)
+![Circuit diagram](circuit.png)
 
-## Task Description
-- Initialize the UART in 8-bit mode.
-- Configure the baud rate to 9600 bps.
-- Transmit the message continuously:
+## Implementation
 
-  Hello from 8051
+`uart_init()` sets Timer 1 to Mode 2, loads `TH1` and `TL1` with `0xFD`, sets `SCON` to `0x50` (serial Mode 1 with reception enabled), and starts Timer 1. `uart_tx_char()` writes to `SBUF` and waits for `TI`; `uart_tx_string()` sends a null-terminated string. The main loop sends the message and waits approximately one second using a software delay.
 
-- Display the received characters on the PC using PuTTY.
+## Working Principle
 
-## Algorithm
-1. Initialize the UART registers.
-2. Configure the baud rate.
-3. Enable serial communication.
-4. Load each character into the transmit buffer.
-5. Wait until transmission is complete.
-6. Continue transmitting the message.
+1. Configure Timer 1 and the UART.
+2. Send each character through `SBUF`, waiting for transmission completion.
+3. Send carriage return and line feed.
+4. Wait, then repeat the message.
 
-## Source Files
-- uart_tx.c – Embedded C source code.
-- uart_tx.uvproj – Keil project file.
-- Objects/uart_tx.hex – Compiled HEX file.
-- circuit.png – Circuit diagram.
+## Output / Results
 
-## Result
-The UART of the AT89S52 microcontroller was configured successfully, and the message was transmitted serially to the PC terminal.
+The intended terminal output is a recurring `Hello from 8051` line. The baud rate and delay depend on the actual clock and compiler; no terminal screenshot is present.
+
+## Conclusion
+
+The program demonstrates UART configuration and polling-based string transmission from an AT89S52 to a serial terminal.

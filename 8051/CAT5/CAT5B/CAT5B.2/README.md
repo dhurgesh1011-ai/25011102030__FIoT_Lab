@@ -1,52 +1,63 @@
-# EXPERIMENT DETAILS
+# CAT5B.2 — Variable-Frequency Square-Wave Generator
 
-**EXP:** CONTINUOUS ASSESSMENT 5 (CAT5)
+## Overview
 
-**DATE:** 10/08/2026
+This AT89S52 program toggles `P1.1` from a Timer 0 interrupt. A push-button selects one of five timer reload settings for the output square wave.
 
-**NAME OF EXP:** Hardware Timer and Interrupt-Based Timing for LED Fading, Pulse Generation, and Stepper Motor Control
+## Objectives
 
-**HARDWARE SETUP / PLATFORM:** AT89S52 (11.0592 MHz) + Keil C51 uVision + Oscilloscope
+- Configure Timer 0 in 16-bit Mode 1.
+- Generate a square wave by toggling a GPIO in the timer ISR.
+- Change the selected frequency using a debounced button.
 
----
+## Hardware Requirements
 
-## TASK 5B.2: Variable-Frequency Square-Wave Generator
+- AT89S52 microcontroller with an 11.0592 MHz clock assumed by the source timing calculations
+- Push-button input on `P3.2`
+- Signal output on `P1.1`
+- Oscilloscope or equivalent instrument to observe the output (as listed in the existing assignment notes)
 
-### 1. Hardware Setup & Circuit Diagram
+## Software Requirements
 
-- **MCU:** AT89S52 @ 11.0592 MHz
-- **Signal Output Pin:** `P1.1` → Oscilloscope Channel 1
-- **Mode Selector Button:** `P3.2`
-- **Frequency Modes:** 100 Hz, 500 Hz, 1 kHz, 2 kHz, 5 kHz
+- Keil µVision with the C51 toolchain
+- `TASK5B_2.uvproj` declares a 33 MHz project clock, while the reload table is calculated for 11.0592 MHz. Verify the actual clock before interpreting the selected frequencies.
 
-![CAT5B.2 Circuit Diagram](circuit.png)
+## Project Structure
 
-### 2. Core Logic / Pseudocode / Code Base
+```text
+CAT5B.2/
+├── README.md
+├── STARTUP.A51
+├── TASK5B_2.uvproj
+├── circuit.png
+├── main.c
+└── Objects/
+    └── TASK5B_2.hex
+```
 
-**Working Principle:**
+- `main.c` contains the reload tables, timer ISR, and button handling.
+- `TASK5B_2.uvproj` includes `main.c` and `STARTUP.A51`.
+- `Objects/TASK5B_2.hex` is the existing build output.
 
-Timer 0 operates in Mode 1 to generate interrupts at selected half-period intervals. A lookup table containing Timer 0 reload values determines the output frequency. Each interrupt toggles `P1.1`, producing a 50% duty-cycle square wave.
+## Circuit Diagram
 
-Pressing the mode selector button connected to `P3.2` cycles through the five available frequency modes.
+![Circuit diagram](circuit.png)
 
-**Pseudocode:**
+## Implementation
 
-1. Precompute 16-bit Timer 0 reload values for the five frequency modes.
-2. Configure Timer 0 in Mode 1.
-3. In the Timer 0 ISR:
-   - Reload `TH0` and `TL0` using the selected lookup-table values.
-   - Toggle the `P1.1` output pin.
-4. Poll the `P3.2` button and debounce the input.
-5. Increment `freq_mode` modulo 5 when the button is pressed.
+The source stores five high/low timer reload pairs in `th_table` and `tl_table`. Timer 0's ISR reloads the timer for the current `freq_mode` and complements `P1.1`. The foreground loop debounces an active-low button on `P3.2`, advances the mode modulo five, and waits for button release. The source associates the modes with 100 Hz, 500 Hz, 1 kHz, 2 kHz, and 5 kHz at 11.0592 MHz.
 
-**Code Base:**
+## Working Principle
 
-- `th_table[]` and `tl_table[]` store the Timer 0 reload values.
-- Lookup tables avoid runtime division inside the interrupt service routine.
-- `freq_mode` selects the current output frequency.
+1. Initialize `P1.1`, the button input, and Timer 0.
+2. Timer interrupts reload the selected half-period and toggle the output.
+3. A debounced button press advances to the next reload-table entry.
+4. The ISR uses the new entry for subsequent output transitions.
 
-**Build Note:** Rebuild `TASK5B_2.uvproj` in Keil C51 uVision to regenerate `Objects/TASK5B_2.hex` before flashing the AT89S52 board.
+## Output / Results
 
-### 3. Inference
+The intended output is a nominal 50% duty-cycle square wave with five button-selectable frequency settings. Actual frequencies depend on the oscillator and interrupt overhead; no measurement screenshot is present.
 
-Timer 0 reload lookup tables enable variable-frequency square-wave generation from 100 Hz to 5 kHz. The output maintains an approximately 50% duty cycle, and the frequency can be changed using the mode selector button.
+## Conclusion
+
+The experiment demonstrates timer-reload selection, interrupt-driven GPIO toggling, and button-controlled signal generation.

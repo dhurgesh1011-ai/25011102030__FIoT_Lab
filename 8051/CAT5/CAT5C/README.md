@@ -1,60 +1,67 @@
-# EXPERIMENT DETAILS
+# CAT5C — Stepper Motor Speed and Direction Control
 
-**EXP:** CONTINUOUS ASSESSMENT 5 (CAT5)
+## Overview
 
-**DATE:** 10/08/2026
+This AT89S52 program sequences four output phases for a stepper motor. Timer 0 sets the step interval; separate push-buttons select speed and direction.
 
-**NAME OF EXP:** Hardware Timer and Interrupt-Based Timing for LED Fading, Pulse Generation, and Stepper Motor Control
+## Objectives
 
-**HARDWARE SETUP / PLATFORM:** AT89S52 (11.0592 MHz) + 8051 Development Board
+- Generate a repeating four-phase sequence using a timer interrupt.
+- Select among three step intervals.
+- Reverse the sequence direction using a push-button.
 
----
+## Hardware Requirements
 
-## TASK 5C: Stepper Motor Speed and Direction Control
+- AT89S52 microcontroller; source timing assumes an 11.0592 MHz clock
+- Stepper motor and the interface shown in the schematic
+- Speed button on `P3.2`
+- Direction button on `P3.3`
 
-### 1. Hardware Setup & Circuit Diagram
+The source drives the upper nibble of `P1`; it does not identify a motor driver or motor model. Confirm the interface in the circuit before connecting hardware.
 
-- **MCU:** AT89S52 @ 11.0592 MHz
-- **Output Device:** Stepper Motor
-- **Control Method:** Timer Interrupt-Based Step Sequencing
-- **Task Status:** Optional for this week
+## Software Requirements
 
-![CAT5C Circuit Diagram](circuit.png)
+- Keil µVision with the C51 toolchain
+- `TASK5C.uvproj` declares a 33 MHz project clock, while the timer preload and speed intervals are based on 11.0592 MHz. Verify the actual clock before relying on step timing.
 
-### 2. Core Logic / Pseudocode / Code Base
-
-**Working Principle:**
-
-The Timer 0 interrupt determines the step interval of the stepper motor. At every interrupt, the controller generates the next step sequence to rotate the motor.
-
-The motor speed is controlled by changing the time interval between consecutive steps.
-
-**Step Sequence:**
+## Project Structure
 
 ```text
-1000
-0100
-0010
-0001
+CAT5C/
+├── README.md
+├── STARTUP.A51
+├── TASK5C.uvproj
+├── main.c
+├── CAT5C Stepper Motor Control Schematic.png
+└── Objects/
+    ├── README.md
+    └── TASK5C.hex
 ```
 
-**Speed Settings:**
+- `main.c` contains timer, phase-sequence, speed, and direction logic.
+- `TASK5C.uvproj` includes `main.c` and `STARTUP.A51`.
+- `Objects/TASK5C.hex` is the existing build output; `Objects/README.md` is present but empty.
 
-- **Slow:** 100 ms/step
-- **Medium:** 50 ms/step
-- **Fast:** 10 ms/step
+## Circuit Diagram
 
-**Pseudocode:**
+![Stepper motor control schematic](CAT5C%20Stepper%20Motor%20Control%20Schematic.png)
 
-1. Configure Timer 0 to generate periodic interrupts.
-2. Store the stepper motor sequence.
-3. On every timer interrupt:
-   - Generate the next step pattern.
-   - Send the pattern to the motor interface.
-   - Advance to the next step.
-4. Change the timer interval to control motor speed.
-5. Repeat the sequence continuously.
+## Implementation
 
-### 3. Inference
+Timer 0 is configured in Mode 1 and reloaded with `0xFC66`, intended as a 1 ms tick at 11.0592 MHz. The ISR counts milliseconds until the selected interval (100, 50, or 10 ms) expires, then advances or reverses `step_idx` and writes one of `0x80`, `0x40`, `0x20`, or `0x10` to `P1.7`–`P1.4`. The foreground loop debounces `P3.2` to cycle speed and `P3.3` to toggle direction.
 
-Timer-based step sequencing enables controlled stepper motor rotation without software delay loops. Changing the timer interval controls motor speed while maintaining a consistent stepping sequence.
+## Working Principle
+
+1. Initialize the outputs, button inputs, and Timer 0.
+2. Count timer interrupts until the selected step interval has elapsed.
+3. Output the next phase in the forward or reverse sequence.
+4. Update speed or direction when the corresponding button is pressed.
+5. Continue generating steps.
+
+## Output / Results
+
+The intended result is a four-phase output sequence with three selectable step intervals and reversible phase order. Mechanical rotation and timing depend on the motor interface, actual clock, and hardware; no output screenshot is present.
+
+## Conclusion
+
+The experiment demonstrates timer-controlled step sequencing, speed selection, and direction reversal for a stepper-motor interface.
