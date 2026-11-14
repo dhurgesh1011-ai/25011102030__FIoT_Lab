@@ -46,7 +46,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\Objects\</OutputDirectory>
-          <OutputName>week5</OutputName>
+          <OutputName>Switch_logic_28.7</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -377,14 +377,9 @@
           <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
-              <FileName>week5_t2.c</FileName>
+              <FileName>cat_03.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\week5_t2.c</FilePath>
-            </File>
-            <File>
-              <FileName>week5_t1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\week5_t1.c</FilePath>
+              <FilePath>.\cat_03.c</FilePath>
             </File>
           </Files>
         </Group>
